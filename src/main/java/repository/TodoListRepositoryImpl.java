@@ -1,9 +1,20 @@
 package repository;
 
+import com.zaxxer.hikari.HikariDataSource;
 import entity.TodoList;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class TodoListRepositoryImpl implements TodoListRepository {
     public TodoList[] data = new TodoList[10];
+
+    private HikariDataSource dataSource;
+
+    public TodoListRepositoryImpl(HikariDataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     @Override
     public TodoList[] getAll() {
@@ -37,14 +48,15 @@ public class TodoListRepositoryImpl implements TodoListRepository {
 
     @Override
     public void add(TodoList todoList) {
-        reSizeIfFull();
+        String sql = "insert into todolist(todo) values (?);";
 
-        // add to position index == null
-        for (var i = 0; i < data.length; i++) {
-            if (data[i] == null) {
-                data[i] = todoList;
-                break;
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, todoList.getTodo());
+                statement.executeUpdate();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
