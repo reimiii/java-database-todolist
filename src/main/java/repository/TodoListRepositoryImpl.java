@@ -5,6 +5,7 @@ import entity.TodoList;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class TodoListRepositoryImpl implements TodoListRepository {
@@ -60,25 +61,44 @@ public class TodoListRepositoryImpl implements TodoListRepository {
         }
     }
 
-    @Override
-    public boolean remove(Integer number) {
-        if ((number - 1) >= data.length) {
-            return false;
-        } else if (data[number - 1] == null) {
-            return false;
-        } else {
-            for (var i = (number - 1); i < data.length; i++) {
-                // hmmm misal panjang nya 10 - 1 = 9, maka index ke 9 = null index ke 9 = nullindex ke 9 = nullindex ke 9 = nullindex ke 9 = null
-                // jika i itu 10 - 1 = 9, panjang array 10 - 1 = 9 maka
-                // model[9] = null, okay make sense, ngerti ngerti!
-                if (i == (data.length - 1)) {
-                    data[i] = null;
-                } else {
-                    // else nya itu maka si model[8] value nya = model[8 + 1]
-                    data[i] = data[i + 1];
+    private boolean isExist(Integer number) {
+        String sql = "select id from todolist where id = ?";
+
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, number);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return true;
+                    } else {
+                        return false;
+                    }
                 }
             }
-            return true;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean remove(Integer number) {
+        if (isExist(number)) {
+            String sql = "delete from todolist where id = ?";
+
+            try (Connection connection = dataSource.getConnection()) {
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setInt(1, number);
+                    statement.executeUpdate();
+
+                    return true;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return false;
         }
     }
 }
