@@ -14,3 +14,6 @@ create table todolist
 show tables;
 
 desc todolist;
+
+select *
+from todolist;

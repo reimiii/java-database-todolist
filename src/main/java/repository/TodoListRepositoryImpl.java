@@ -1,8 +1,8 @@
 package repository;
 
-import com.zaxxer.hikari.HikariDataSource;
 import entity.TodoList;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -10,9 +10,9 @@ import java.sql.SQLException;
 public class TodoListRepositoryImpl implements TodoListRepository {
     public TodoList[] data = new TodoList[10];
 
-    private HikariDataSource dataSource;
+    private DataSource dataSource;
 
-    public TodoListRepositoryImpl(HikariDataSource dataSource) {
+    public TodoListRepositoryImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
