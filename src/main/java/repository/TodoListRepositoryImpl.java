@@ -3,14 +3,11 @@ package repository;
 import entity.TodoList;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TodoListRepositoryImpl implements TodoListRepository {
-    public TodoList[] data = new TodoList[10];
-
     private DataSource dataSource;
 
     public TodoListRepositoryImpl(DataSource dataSource) {
@@ -19,31 +16,25 @@ public class TodoListRepositoryImpl implements TodoListRepository {
 
     @Override
     public TodoList[] getAll() {
-        return data;
-    }
+        String sql = "select id, todo from todolist;";
 
-    public boolean isFull() {
-        // check data full?
-        var isFull = true;
-        for (var i = 0; i < data.length; i++) {
-            if (data[i] == null) {
-                // model still not full?
-                isFull = false;
-                break;
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+
+            List<TodoList> todoLists = new ArrayList<>();
+
+            while (resultSet.next()) {
+                TodoList list = new TodoList();
+                list.setId(resultSet.getInt("id"));
+                list.setTodo(resultSet.getString("todo"));
+
+                todoLists.add(list);
             }
-        }
-        return isFull;
-    }
 
-    public void reSizeIfFull() {
-        // if full is true? then index length array resize 2*
-        if (isFull()) {
-            var temp = data;
-            data = new TodoList[data.length * 2];
-
-            for (var i = 0; i < temp.length; i++) {
-                data[i] = temp[i];
-            }
+            return todoLists.toArray(new TodoList[]{});
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
